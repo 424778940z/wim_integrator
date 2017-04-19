@@ -57,7 +57,6 @@
             this.textBox_search_folder.Name = "textBox_search_folder";
             this.textBox_search_folder.Size = new System.Drawing.Size(512, 21);
             this.textBox_search_folder.TabIndex = 1;
-            this.textBox_search_folder.Text = "d:\\wimtest";
             // 
             // label_search_folder
             // 

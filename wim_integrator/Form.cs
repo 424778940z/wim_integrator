@@ -17,6 +17,9 @@ namespace wim_integrator
 {
     public partial class form : Form
     {
+        //version
+        string version_string = "Version: 0.1";
+
         //for Thread, since it seems no way to pass args
         string des_wim_path;
         //int des_wim_vol = 0;
@@ -31,6 +34,8 @@ namespace wim_integrator
 
             //I know what I'm doing, no more stupid Microsoft call-recall endless events
             Control.CheckForIllegalCrossThreadCalls = false;
+
+            this.Text = this.Text + " " + version_string;
 
             this.listView_vol.View = View.Details;
             this.listView_vol.Columns.Add("Path");
@@ -124,6 +129,7 @@ namespace wim_integrator
 
         private void integrate_wim()
         {
+            //not necessary, but looks more clear
             List<string> path = new List<string>();
             List<string> vol = new List<string>();
             List<string> name = new List<string>();
@@ -140,20 +146,22 @@ namespace wim_integrator
                 ver.Add(lv_ptr.Items[i].SubItems[5].Text);
             }
 
-            DismProgressCallback prog_callback = refresh_progress_bar_step;
-
-            ProcessStartInfo proc_startinfo = new ProcessStartInfo();
-            proc_startinfo.WindowStyle = ProcessWindowStyle.Hidden;
-            proc_startinfo.CreateNoWindow = true;
-            proc_startinfo.UseShellExecute = false;
-            proc_startinfo.RedirectStandardOutput = true;
-            proc_startinfo.RedirectStandardError = true;
-
             string wim_int_path = Environment.GetEnvironmentVariable("tmp") + "\\wim_integrator";
-            Directory.CreateDirectory(wim_int_path);
+            if (!Directory.Exists(wim_int_path))
+            {
+                Directory.CreateDirectory(wim_int_path);
+            }
+            string wim_int_temp_path = des_wim_path + ".temp";
+            if(!Directory.Exists(wim_int_temp_path))
+            {
+                Directory.CreateDirectory(wim_int_temp_path);
+            }
+
+            DismProgressCallback prog_callback = refresh_progress_bar_step;
             DismApi.Initialize(DismLogLevel.LogErrors);
 
-            for (int i = 0; i < path.Count; i++)
+            //main loop
+            for (int i = 0; i < lv_ptr.Items.Count; i++)
             {
                 src_wim_path = path[i];
                 src_wim_vol = Convert.ToInt32(vol[i]);
@@ -163,10 +171,20 @@ namespace wim_integrator
                                   ver[i];
 
                 //mount vol
+                lv_ptr.Items[i].BackColor = Color.Gold;//color
                 DismApi.MountImage(src_wim_path, wim_int_path, src_wim_vol, true, prog_callback);
 
                 //imagex
-                string imagex_flag = "/compress maximum /scroll" + " ";
+                lv_ptr.Items[i].BackColor = Color.Aqua;//color
+                Process imagex = new Process();
+                imagex.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                imagex.StartInfo.CreateNoWindow = true;
+                imagex.StartInfo.UseShellExecute = false;
+                imagex.StartInfo.RedirectStandardOutput = true;
+                imagex.StartInfo.RedirectStandardError = true;
+
+                string imagex_flag = "/compress maximum /scroll /temp" + " " + "\"" + wim_int_temp_path + "\"" + " ";
+                //imagex cannot create new image by using append, must use capture, everything else is the same, stupid.
                 string imagex_operation;
                 if (i == 0)
                 {
@@ -177,13 +195,12 @@ namespace wim_integrator
                     imagex_operation = "/append" + " ";
                 }
                 string imagex_option = "\"" + wim_int_path + "\"" + " " + "\"" + des_wim_path + "\"" + " " + "\"" + vol_name + "\"";
-                proc_startinfo.FileName = "imagex.exe";
-                proc_startinfo.Arguments = imagex_flag + imagex_operation + imagex_option;
-                
-                Process imagex = new Process();
-                imagex.StartInfo = proc_startinfo;
+                imagex.StartInfo.FileName = "imagex.exe";
+                imagex.StartInfo.Arguments = imagex_flag + imagex_operation + imagex_option;
+
                 imagex.Start();
 
+                refresh_progress_bar_step(0, 100);//reset progress bar
                 string progress;
                 while (!imagex.HasExited)
                 {
@@ -197,27 +214,43 @@ namespace wim_integrator
                     }
                     Thread.Sleep(500);
                 }
-
+                
                 //umount vol
+                lv_ptr.Items[i].BackColor = Color.DodgerBlue;//color
                 DismApi.UnmountImage(wim_int_path, false, prog_callback);
 
-                if (imagex.ExitCode == 0)
+                if (imagex.ExitCode == 0)//color
                 {
-                    lv_ptr.Items[i].BackColor = Color.LightGreen;
+                    lv_ptr.Items[i].BackColor = Color.Lime;
                 }
                 else
                 {
                     lv_ptr.Items[i].BackColor = Color.Red;
                 }
-                refresh_progress_bar_total(i + 1, path.Count);
+
+                refresh_progress_bar_total(i + 1, lv_ptr.Items.Count);
             }
 
             DismApi.Shutdown();
-            Directory.Delete(wim_int_path, true);
+            if (Directory.Exists(wim_int_path))
+            {
+                Directory.Delete(wim_int_path, true);
+            }
+            if (Directory.Exists(wim_int_temp_path))
+            {
+                Directory.Delete(wim_int_temp_path, true);
+            }
+
+            //unblock buttos
+            this.button_search_folder_sel.Enabled = true;
+            this.button_integrate.Enabled = true;
         }
 
         private void integrate_wim_file(string wim_save_path)
         {
+            //block buttons
+            this.button_search_folder_sel.Enabled = false;
+            this.button_integrate.Enabled = false;
             des_wim_path = wim_save_path;
             lv_ptr = this.listView_vol;
             Thread th = new Thread(integrate_wim);
