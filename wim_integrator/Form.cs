@@ -88,23 +88,66 @@ namespace wim_integrator
             this.listView_vol.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
         }
 
+        private void refresh_progress_bar_step(DismProgress progress)
+        {
+            this.progressBar_step.Maximum = progress.Total;
+            this.progressBar_step.Minimum = 0;
+            this.progressBar_step.Value = progress.Current;
+        }
+        private void refresh_progress_bar_total (int current, int total)
+        {
+            this.progressBar_total.Maximum = total;
+            this.progressBar_total.Minimum = 0;
+            this.progressBar_total.Value = current;
+        }
+
         private void integrate_wim_file(string path)
         {
+            DismProgressCallback prog_callback = refresh_progress_bar_step;
+            string wim_int_path = Environment.GetEnvironmentVariable("tmp") + "\\wim_integrator";
+            Directory.CreateDirectory(wim_int_path);
+            DismApi.Initialize(DismLogLevel.LogErrors);
 
             ProcessStartInfo dism_startinfo = new ProcessStartInfo("dism.exe");
             dism_startinfo.WindowStyle = ProcessWindowStyle.Hidden;
+            dism_startinfo.CreateNoWindow = true;
             dism_startinfo.UseShellExecute = false;
             dism_startinfo.RedirectStandardOutput = true;
             dism_startinfo.RedirectStandardError = true;
-            dism_startinfo.Arguments = "/help";
-            Process dism = Process.Start(dism_startinfo);
-            string std_out = dism.StandardError.ReadToEnd();
-            string std_err = dism.StandardOutput.ReadToEnd();
-            MessageBox.Show(std_out);
-            MessageBox.Show(std_err);
-            dism.WaitForExit();
-            MessageBox.Show(dism.ExitCode.ToString());
+            dism_startinfo.Arguments = "";
 
+            string args;
+            for (int i = 0; i < this.listView_vol.Items.Count; i++)
+            {
+                //TODO
+                //th start
+                DismApi.MountImage(this.listView_vol.Items[i].SubItems[0].Text, wim_int_path, Convert.ToInt32(this.listView_vol.Items[0].SubItems[1].Text), true, prog_callback);
+                //dism /append-image
+                /*
+                Process dism = Process.Start(dism_startinfo);
+                string std_out = dism.StandardError.ReadToEnd();
+                string std_err = dism.StandardOutput.ReadToEnd();
+                dism.WaitForExit();
+                */
+                //dism 
+                DismApi.UnmountImage(wim_int_path, false, prog_callback);
+                //th end
+
+                if(true)
+                {
+                    this.listView_vol.Items[i].BackColor = Color.LightGreen;
+                }
+                else
+                {
+                    this.listView_vol.Items[i].BackColor = Color.Red;
+                }
+                refresh_progress_bar_total(i+1, this.listView_vol.Items.Count);
+            }
+            
+            
+
+            DismApi.Shutdown();
+            Directory.Delete(wim_int_path, true);
         }
 
         private void button_search_folder_sel_Click(object sender, EventArgs e)

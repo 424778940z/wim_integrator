@@ -32,8 +32,9 @@
             this.textBox_search_folder = new System.Windows.Forms.TextBox();
             this.label_search_folder = new System.Windows.Forms.Label();
             this.button_search_folder_sel = new System.Windows.Forms.Button();
-            this.progressBar_integration = new System.Windows.Forms.ProgressBar();
+            this.progressBar_step = new System.Windows.Forms.ProgressBar();
             this.button_integrate = new System.Windows.Forms.Button();
+            this.progressBar_total = new System.Windows.Forms.ProgressBar();
             this.SuspendLayout();
             // 
             // listView_vol
@@ -56,6 +57,7 @@
             this.textBox_search_folder.Name = "textBox_search_folder";
             this.textBox_search_folder.Size = new System.Drawing.Size(512, 21);
             this.textBox_search_folder.TabIndex = 1;
+            this.textBox_search_folder.Text = "d:\\wimtest";
             // 
             // label_search_folder
             // 
@@ -77,13 +79,14 @@
             this.button_search_folder_sel.UseVisualStyleBackColor = true;
             this.button_search_folder_sel.Click += new System.EventHandler(this.button_search_folder_sel_Click);
             // 
-            // progressBar_integration
+            // progressBar_step
             // 
-            this.progressBar_integration.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.progressBar_integration.Location = new System.Drawing.Point(12, 429);
-            this.progressBar_integration.Name = "progressBar_integration";
-            this.progressBar_integration.Size = new System.Drawing.Size(601, 23);
-            this.progressBar_integration.TabIndex = 4;
+            this.progressBar_step.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.progressBar_step.Location = new System.Drawing.Point(12, 429);
+            this.progressBar_step.Name = "progressBar_step";
+            this.progressBar_step.Size = new System.Drawing.Size(601, 11);
+            this.progressBar_step.TabIndex = 4;
             // 
             // button_integrate
             // 
@@ -96,13 +99,23 @@
             this.button_integrate.UseVisualStyleBackColor = true;
             this.button_integrate.Click += new System.EventHandler(this.button_integrate_Click);
             // 
+            // progressBar_total
+            // 
+            this.progressBar_total.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.progressBar_total.Location = new System.Drawing.Point(12, 441);
+            this.progressBar_total.Name = "progressBar_total";
+            this.progressBar_total.Size = new System.Drawing.Size(601, 11);
+            this.progressBar_total.TabIndex = 4;
+            // 
             // form
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(704, 461);
             this.Controls.Add(this.button_integrate);
-            this.Controls.Add(this.progressBar_integration);
+            this.Controls.Add(this.progressBar_total);
+            this.Controls.Add(this.progressBar_step);
             this.Controls.Add(this.button_search_folder_sel);
             this.Controls.Add(this.label_search_folder);
             this.Controls.Add(this.textBox_search_folder);
@@ -120,8 +133,9 @@
         private System.Windows.Forms.TextBox textBox_search_folder;
         private System.Windows.Forms.Label label_search_folder;
         private System.Windows.Forms.Button button_search_folder_sel;
-        private System.Windows.Forms.ProgressBar progressBar_integration;
+        private System.Windows.Forms.ProgressBar progressBar_step;
         private System.Windows.Forms.Button button_integrate;
+        private System.Windows.Forms.ProgressBar progressBar_total;
     }
 }
 
