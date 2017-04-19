@@ -11,14 +11,27 @@ using System.IO;
 
 using System.Diagnostics;
 using Microsoft.Dism;
+using System.Threading;
 
 namespace wim_integrator
 {
     public partial class form : Form
     {
+        //for Thread, since it seems no way to pass args
+        string des_wim_path;
+        //int des_wim_vol = 0;
+        string src_wim_path;
+        int src_wim_vol = 0;
+
+        ListView lv_ptr;
+
         public form()
         {
             InitializeComponent();
+
+            //I know what I'm doing, no more stupid Microsoft call-recall endless events
+            Control.CheckForIllegalCrossThreadCalls = false;
+
             this.listView_vol.View = View.Details;
             this.listView_vol.Columns.Add("Path");
             this.listView_vol.Columns.Add("Volume");
@@ -88,66 +101,127 @@ namespace wim_integrator
             this.listView_vol.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
         }
 
-        private void refresh_progress_bar_step(DismProgress progress)
+        private void refresh_progress_bar_step(DismProgress dism_progress)
         {
-            this.progressBar_step.Maximum = progress.Total;
+            this.progressBar_step.Maximum = dism_progress.Total;
             this.progressBar_step.Minimum = 0;
-            this.progressBar_step.Value = progress.Current;
+            this.progressBar_step.Value = dism_progress.Current;
         }
-        private void refresh_progress_bar_total (int current, int total)
+
+        private void refresh_progress_bar_step(int current, int total)
+        {
+            this.progressBar_step.Maximum = total;
+            this.progressBar_step.Minimum = 0;
+            this.progressBar_step.Value = current;
+        }
+
+        private void refresh_progress_bar_total(int current, int total)
         {
             this.progressBar_total.Maximum = total;
             this.progressBar_total.Minimum = 0;
             this.progressBar_total.Value = current;
         }
 
-        private void integrate_wim_file(string path)
+        private void integrate_wim()
         {
+            List<string> path = new List<string>();
+            List<string> vol = new List<string>();
+            List<string> name = new List<string>();
+            List<string> platform = new List<string>();
+            List<string> lang = new List<string>();
+            List<string> ver = new List<string>();
+            for (int i = 0; i < lv_ptr.Items.Count; i++)
+            {
+                path.Add(lv_ptr.Items[i].SubItems[0].Text);
+                vol.Add(lv_ptr.Items[i].SubItems[1].Text);
+                name.Add(lv_ptr.Items[i].SubItems[2].Text);
+                platform.Add(lv_ptr.Items[i].SubItems[3].Text);
+                lang.Add(lv_ptr.Items[i].SubItems[4].Text);
+                ver.Add(lv_ptr.Items[i].SubItems[5].Text);
+            }
+
             DismProgressCallback prog_callback = refresh_progress_bar_step;
+
+            ProcessStartInfo proc_startinfo = new ProcessStartInfo();
+            proc_startinfo.WindowStyle = ProcessWindowStyle.Hidden;
+            proc_startinfo.CreateNoWindow = true;
+            proc_startinfo.UseShellExecute = false;
+            proc_startinfo.RedirectStandardOutput = true;
+            proc_startinfo.RedirectStandardError = true;
+
             string wim_int_path = Environment.GetEnvironmentVariable("tmp") + "\\wim_integrator";
             Directory.CreateDirectory(wim_int_path);
             DismApi.Initialize(DismLogLevel.LogErrors);
 
-            ProcessStartInfo dism_startinfo = new ProcessStartInfo("dism.exe");
-            dism_startinfo.WindowStyle = ProcessWindowStyle.Hidden;
-            dism_startinfo.CreateNoWindow = true;
-            dism_startinfo.UseShellExecute = false;
-            dism_startinfo.RedirectStandardOutput = true;
-            dism_startinfo.RedirectStandardError = true;
-            dism_startinfo.Arguments = "";
-
-            string args;
-            for (int i = 0; i < this.listView_vol.Items.Count; i++)
+            for (int i = 0; i < path.Count; i++)
             {
-                //TODO
-                //th start
-                DismApi.MountImage(this.listView_vol.Items[i].SubItems[0].Text, wim_int_path, Convert.ToInt32(this.listView_vol.Items[0].SubItems[1].Text), true, prog_callback);
-                //dism /append-image
-                /*
-                Process dism = Process.Start(dism_startinfo);
-                string std_out = dism.StandardError.ReadToEnd();
-                string std_err = dism.StandardOutput.ReadToEnd();
-                dism.WaitForExit();
-                */
-                //dism 
-                DismApi.UnmountImage(wim_int_path, false, prog_callback);
-                //th end
+                src_wim_path = path[i];
+                src_wim_vol = Convert.ToInt32(vol[i]);
+                string vol_name = name[i]+ "_" +
+                                  platform[i] + "_" +
+                                  lang[i] + "_" +
+                                  ver[i];
 
-                if(true)
+                //mount vol
+                DismApi.MountImage(src_wim_path, wim_int_path, src_wim_vol, true, prog_callback);
+
+                //imagex
+                string imagex_flag = "/compress maximum /scroll" + " ";
+                string imagex_operation;
+                if (i == 0)
                 {
-                    this.listView_vol.Items[i].BackColor = Color.LightGreen;
+                    imagex_operation = "/capture" + " ";
                 }
                 else
                 {
-                    this.listView_vol.Items[i].BackColor = Color.Red;
+                    imagex_operation = "/append" + " ";
                 }
-                refresh_progress_bar_total(i+1, this.listView_vol.Items.Count);
+                string imagex_option = "\"" + wim_int_path + "\"" + " " + "\"" + des_wim_path + "\"" + " " + "\"" + vol_name + "\"";
+                proc_startinfo.FileName = "imagex.exe";
+                proc_startinfo.Arguments = imagex_flag + imagex_operation + imagex_option;
+                
+                Process imagex = new Process();
+                imagex.StartInfo = proc_startinfo;
+                imagex.Start();
+
+                string progress;
+                while (!imagex.HasExited)
+                {
+                    progress = imagex.StandardOutput.ReadLine();
+                    if(progress != null)
+                    {
+                        if (progress.StartsWith("["))
+                        {
+                            refresh_progress_bar_step(Convert.ToInt32(progress.Substring(2, 3)), 100);
+                        }
+                    }
+                    Thread.Sleep(500);
+                }
+
+                //umount vol
+                DismApi.UnmountImage(wim_int_path, false, prog_callback);
+
+                if (imagex.ExitCode == 0)
+                {
+                    lv_ptr.Items[i].BackColor = Color.LightGreen;
+                }
+                else
+                {
+                    lv_ptr.Items[i].BackColor = Color.Red;
+                }
+                refresh_progress_bar_total(i + 1, path.Count);
             }
-            
-            
 
             DismApi.Shutdown();
             Directory.Delete(wim_int_path, true);
+        }
+
+        private void integrate_wim_file(string wim_save_path)
+        {
+            des_wim_path = wim_save_path;
+            lv_ptr = this.listView_vol;
+            Thread th = new Thread(integrate_wim);
+            th.Start();
         }
 
         private void button_search_folder_sel_Click(object sender, EventArgs e)
