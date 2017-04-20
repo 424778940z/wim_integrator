@@ -16,8 +16,21 @@ Note: you need a imagex.exe put in the same folder contains wim_integrator.exe
 - [ ] status bar for display imagex output
 
 # Screenshot
+
+Folder selected
 ![wim_integrator_0](https://raw.githubusercontent.com/424778940z/wim_integrator/master/screenshot/wim_integrator_0.png)
+
+Mount volume (Gold)
 ![wim_integrator_1](https://raw.githubusercontent.com/424778940z/wim_integrator/master/screenshot/wim_integrator_1.png)
+
+Imagex running (Aqua)
 ![wim_integrator_2](https://raw.githubusercontent.com/424778940z/wim_integrator/master/screenshot/wim_integrator_2.png)
+
+Umount volume (DodgerBlue)
 ![wim_integrator_3](https://raw.githubusercontent.com/424778940z/wim_integrator/master/screenshot/wim_integrator_3.png)
+
+Succeed (Lime), if fail (Red)
 ![wim_integrator_4](https://raw.githubusercontent.com/424778940z/wim_integrator/master/screenshot/wim_integrator_4.png)
+
+Everything finished without error 
+![wim_integrator_5](https://raw.githubusercontent.com/424778940z/wim_integrator/master/screenshot/wim_integrator_5.png)
