@@ -9,6 +9,8 @@ Simply extract all iso, select the folder contains all extracted iso content. Th
 - [ ] be able to select mount point
 - [ ] be able to select imagex temp folder
 - [ ] be able to change compresson level
+- [ ] be able to change default search file name (current: install.wim)
+- [ ] be able to filt out small wim files (eg: boot.wim)
 - [ ] status bar for display imagex output
 
 # Screenshot
