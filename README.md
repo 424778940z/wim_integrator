@@ -4,6 +4,7 @@ I build this tool for integrate them in one single wim file. (in wim file, same 
 
 # How to use
 Simply extract all iso, select the folder contains all extracted iso content. Then hit [Integrate] button, chose a folder for save integrated wim file. (make sure have enough space)
+Note: you need a imagex.exe put in the same folder contains wim_integrator.exe
 
 # To Do
 - [ ] be able to select mount point
