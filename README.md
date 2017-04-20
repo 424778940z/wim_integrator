@@ -34,3 +34,6 @@ Succeed (Lime), if fail (Red)
 
 Everything finished without error 
 ![wim_integrator_5](https://raw.githubusercontent.com/424778940z/wim_integrator/master/screenshot/wim_integrator_5.png)
+
+Finished wim
+![finished_wim](https://raw.githubusercontent.com/424778940z/wim_integrator/master/screenshot/finished_wim.png)

@@ -46,20 +46,20 @@ namespace wim_integrator
             this.listView_vol.Columns.Add("Version");
         }
 
-        private void search_wim_file(string path)
+        private void search_wim_file(string path, string keyword)
         {
-            List<string> install_wim_list = new List<string>();
+            List<string> wim_file_list = new List<string>();
 
-            install_wim_list = Directory.GetFiles(path, "install.wim", SearchOption.AllDirectories).ToList();
+            wim_file_list = Directory.GetFiles(path, keyword, SearchOption.AllDirectories).ToList();
 
             this.listView_vol.BeginUpdate();
             DismApi.Initialize(DismLogLevel.LogErrors);
-            for (int i = 0; i < install_wim_list.Count; i++)
+            for (int i = 0; i < wim_file_list.Count; i++)
             {
-                DismImageInfoCollection imageInfos = DismApi.GetImageInfo(install_wim_list[i]);
+                DismImageInfoCollection imageInfos = DismApi.GetImageInfo(wim_file_list[i]);
                 for(int j = 0; j < imageInfos.Count; j++)
                 {
-                    ListViewItem item_buff = new ListViewItem(install_wim_list[i]);
+                    ListViewItem item_buff = new ListViewItem(wim_file_list[i]);
 
                     //vol
                     item_buff.SubItems.Add(imageInfos[j].ImageIndex.ToString());
@@ -266,7 +266,7 @@ namespace wim_integrator
             if (folder_sel_dialog.ShowDialog() == DialogResult.OK)
             {
                 this.textBox_search_folder.Text = folder_sel_dialog.SelectedPath;
-                search_wim_file(this.textBox_search_folder.Text);
+                search_wim_file(this.textBox_search_folder.Text, "install.wim");
             }
         }
 
