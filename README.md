@@ -11,7 +11,7 @@ Note: you need a imagex.exe put in the same folder contains wim_integrator.exe
 - [x] be able to select mount point
 - [x] be able to select imagex temp folder
 - [x] be able to change compresson level
-- [x] be able to change default search file name (current: install.wim)
+- [x] be able to change default search file name (default: *.wim)
 - [ ] be able to filter out small wim files (eg: boot.wim)
 - [x] status bar for display imagex output
 - [ ] move search wim to thread
