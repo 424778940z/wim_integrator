@@ -1,0 +1,15 @@
+
+Version 0.62
+[feature_add] be able to select mount point
+[feature_add] be able to select imagex temp folder
+[feature_add] be able to change compresson level
+[feature_add] be able to change default search file name (current: install.wim)
+[feature_add] status bar for display imagex output
+[bug_fixed] volume list is not cleared when select new search folder
+[bug_fixed] progress bar is not cleared when start a new integration
+
+Version 0.1
+[feature N\A] Initial Release
+
+Version calculation
+new_version = current_version + (feature_xxx * 0.1) + (bug_fixed * 0.01)

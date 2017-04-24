@@ -8,12 +8,13 @@ Simply extract all iso, select the folder contains all extracted iso content. Th
 Note: you need a imagex.exe put in the same folder contains wim_integrator.exe
 
 # ToDo
-- [ ] be able to select mount point
-- [ ] be able to select imagex temp folder
-- [ ] be able to change compresson level
-- [ ] be able to change default search file name (current: install.wim)
-- [ ] be able to filt out small wim files (eg: boot.wim)
-- [ ] status bar for display imagex output
+- [x] be able to select mount point
+- [x] be able to select imagex temp folder
+- [x] be able to change compresson level
+- [x] be able to change default search file name (current: install.wim)
+- [ ] be able to filter out small wim files (eg: boot.wim)
+- [x] status bar for display imagex output
+- [ ] move search wim to thread
 
 # Screenshot
 

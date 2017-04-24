@@ -18,13 +18,18 @@ namespace wim_integrator
     public partial class form : Form
     {
         //version
-        string version_string = "Version: 0.1";
+        string version_string = "Version: 0.6";
 
         //for Thread, since it seems no way to pass args
-        string des_wim_path;
-        //int des_wim_vol = 0;
         string src_wim_path;
         int src_wim_vol = 0;
+        string des_wim_path;
+        //int des_wim_vol = 0;
+
+        string mount_point;
+        string tmp_folder;
+        string search_rule;
+        string comp_lv;
 
         ListView lv_ptr;
 
@@ -35,8 +40,23 @@ namespace wim_integrator
             //I know what I'm doing, no more stupid Microsoft call-recall endless events
             Control.CheckForIllegalCrossThreadCalls = false;
 
+            //title
             this.Text = this.Text + " " + version_string;
 
+            //options init
+            mount_point = Environment.GetEnvironmentVariable("tmp") + "\\wim_integrator_mnt_point";
+            this.textBox_mnt_point.Text = mount_point;
+
+            this.comboBox_comp_lv.Items.Add("Maximum");
+            this.comboBox_comp_lv.Items.Add("Fast");
+            this.comboBox_comp_lv.Items.Add("None");
+            this.comboBox_comp_lv.SelectedIndex = 0;
+            this.comboBox_comp_lv.DropDownStyle =  ComboBoxStyle.DropDownList;
+
+            search_rule = "*.wim";
+            this.textBox_search_rule.Text = search_rule;
+
+            //lv init
             this.listView_vol.View = View.Details;
             this.listView_vol.Columns.Add("Path");
             this.listView_vol.Columns.Add("Volume");
@@ -44,6 +64,98 @@ namespace wim_integrator
             this.listView_vol.Columns.Add("Platform");
             this.listView_vol.Columns.Add("Language");
             this.listView_vol.Columns.Add("Version");
+
+            refresh_status_label("Status", "Ready");
+        }
+
+        private void button_search_folder_sel_Click(object sender, EventArgs e)
+        {
+            FolderBrowserDialog folder_sel_dialog = new System.Windows.Forms.FolderBrowserDialog();
+            folder_sel_dialog.Description = "Select folder contains WIM files, I will search all sub folders.";
+            folder_sel_dialog.ShowNewFolderButton = false;
+            folder_sel_dialog.SelectedPath = this.textBox_search_folder.Text;
+            if (folder_sel_dialog.ShowDialog() == DialogResult.OK)
+            {
+                this.textBox_search_folder.Text = folder_sel_dialog.SelectedPath;
+                search_wim_file(this.textBox_search_folder.Text, search_rule);
+            }
+        }
+        private void button_mount_point_sel_Click(object sender, EventArgs e)
+        {
+            FolderBrowserDialog folder_sel_dialog = new System.Windows.Forms.FolderBrowserDialog();
+            folder_sel_dialog.Description = "Note: this folder will be DELETED after integration!";
+            folder_sel_dialog.ShowNewFolderButton = true;
+            folder_sel_dialog.SelectedPath = this.textBox_search_folder.Text;
+            if (folder_sel_dialog.ShowDialog() == DialogResult.OK)
+            {
+                this.textBox_mnt_point.Text = folder_sel_dialog.SelectedPath;
+            }
+        }
+        private void button_tmp_folder_sel_Click(object sender, EventArgs e)
+        {
+            FolderBrowserDialog folder_sel_dialog = new System.Windows.Forms.FolderBrowserDialog();
+            folder_sel_dialog.Description = "Note: this folder will be DELETED after integration!";
+            folder_sel_dialog.ShowNewFolderButton = true;
+            folder_sel_dialog.SelectedPath = this.textBox_search_folder.Text;
+            if (folder_sel_dialog.ShowDialog() == DialogResult.OK)
+            {
+                this.textBox_tmp_folder.Text = folder_sel_dialog.SelectedPath;
+            }
+        }
+        private void button_integrate_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog save_file_dialog = new System.Windows.Forms.SaveFileDialog();
+            //file_dialog.Title = "Save ingrated wim file";
+            save_file_dialog.Filter = "wim file (*.wim)|*.wim";
+            if(save_file_dialog.ShowDialog() == DialogResult.OK)
+            {
+                integrate_wim_file(save_file_dialog.FileName);
+            }
+        }
+        private void comboBox_comp_lv_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            comp_lv = this.comboBox_comp_lv.SelectedItem.ToString();
+        }
+
+        private void refresh_status_label(string from, string text)
+        {
+            this.toolStripStatusLabel.Text = "[" + from + "]" + " " + text;
+        }
+
+        private void refresh_progress_bar_step(DismProgress dism_progress)
+        {
+            this.progressBar_step.Maximum = dism_progress.Total;
+            this.progressBar_step.Minimum = 0;
+            this.progressBar_step.Value = dism_progress.Current;
+        }
+
+        private void refresh_progress_bar_step(int current, int total)
+        {
+            this.progressBar_step.Maximum = total;
+            this.progressBar_step.Minimum = 0;
+            this.progressBar_step.Value = current;
+        }
+
+        private void refresh_progress_bar_total(int current, int total)
+        {
+            this.progressBar_total.Maximum = total;
+            this.progressBar_total.Minimum = 0;
+            this.progressBar_total.Value = current;
+        }
+
+        private void en_dis_able_everything(bool is_enable)
+        {
+            this.textBox_search_folder.Enabled = is_enable;
+            this.textBox_mnt_point.Enabled = is_enable;
+            this.textBox_tmp_folder.Enabled = is_enable;
+            this.textBox_search_rule.Enabled = is_enable;
+
+            this.comboBox_comp_lv.Enabled = is_enable;
+
+            this.button_search_folder_sel.Enabled = is_enable;
+            this.button_mount_point_sel.Enabled = is_enable;
+            this.button_tmp_folder_sel.Enabled = is_enable;
+            this.button_integrate.Enabled = is_enable;
         }
 
         private void search_wim_file(string path, string keyword)
@@ -54,10 +166,11 @@ namespace wim_integrator
 
             this.listView_vol.BeginUpdate();
             DismApi.Initialize(DismLogLevel.LogErrors);
+            this.listView_vol.Items.Clear();
             for (int i = 0; i < wim_file_list.Count; i++)
             {
                 DismImageInfoCollection imageInfos = DismApi.GetImageInfo(wim_file_list[i]);
-                for(int j = 0; j < imageInfos.Count; j++)
+                for (int j = 0; j < imageInfos.Count; j++)
                 {
                     ListViewItem item_buff = new ListViewItem(wim_file_list[i]);
 
@@ -69,7 +182,7 @@ namespace wim_integrator
 
                     //platform
                     string platform_translated;
-                    switch(imageInfos[j].Architecture)
+                    switch (imageInfos[j].Architecture)
                     {
                         case DismProcessorArchitecture.None:
                             platform_translated = "None";
@@ -106,29 +219,16 @@ namespace wim_integrator
             this.listView_vol.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
         }
 
-        private void refresh_progress_bar_step(DismProgress dism_progress)
-        {
-            this.progressBar_step.Maximum = dism_progress.Total;
-            this.progressBar_step.Minimum = 0;
-            this.progressBar_step.Value = dism_progress.Current;
-        }
-
-        private void refresh_progress_bar_step(int current, int total)
-        {
-            this.progressBar_step.Maximum = total;
-            this.progressBar_step.Minimum = 0;
-            this.progressBar_step.Value = current;
-        }
-
-        private void refresh_progress_bar_total(int current, int total)
-        {
-            this.progressBar_total.Maximum = total;
-            this.progressBar_total.Minimum = 0;
-            this.progressBar_total.Value = current;
-        }
-
         private void integrate_wim()
         {
+            //clear progress bar
+            refresh_progress_bar_total(0, 100);
+            //status bar
+            refresh_status_label("Status", "Busy");
+
+            //block buttons
+            en_dis_able_everything(false);
+
             //not necessary, but looks more clear
             List<string> path = new List<string>();
             List<string> vol = new List<string>();
@@ -146,15 +246,31 @@ namespace wim_integrator
                 ver.Add(lv_ptr.Items[i].SubItems[5].Text);
             }
 
-            string wim_int_path = Environment.GetEnvironmentVariable("tmp") + "\\wim_integrator";
-            if (!Directory.Exists(wim_int_path))
+            if (this.textBox_mnt_point.Text.Length == 0)
             {
-                Directory.CreateDirectory(wim_int_path);
+                mount_point = Environment.GetEnvironmentVariable("tmp") + "\\wim_integrator_mnt_point";
             }
-            string wim_int_temp_path = des_wim_path + ".temp";
-            if(!Directory.Exists(wim_int_temp_path))
+            else
             {
-                Directory.CreateDirectory(wim_int_temp_path);
+                mount_point = this.textBox_mnt_point.Text;
+            }
+            if (this.textBox_tmp_folder.Text.Length == 0)
+            {
+                tmp_folder = des_wim_path + ".temp";
+            }
+            else
+            {
+                tmp_folder = this.textBox_tmp_folder.Text;
+            }
+
+            if (!Directory.Exists(mount_point))
+            {
+                Directory.CreateDirectory(mount_point);
+            }
+
+            if (!Directory.Exists(tmp_folder))
+            {
+                Directory.CreateDirectory(tmp_folder);
             }
 
             DismProgressCallback prog_callback = refresh_progress_bar_step;
@@ -165,14 +281,20 @@ namespace wim_integrator
             {
                 src_wim_path = path[i];
                 src_wim_vol = Convert.ToInt32(vol[i]);
-                string vol_name = name[i]+ "_" +
+                string vol_name = name[i] + "_" +
                                   platform[i] + "_" +
                                   lang[i] + "_" +
                                   ver[i];
 
                 //mount vol
+
+                //clear progress bar
+                refresh_progress_bar_step(0, 100);
+                //status bar
+                refresh_status_label("DISM", "Mounting");
+
                 lv_ptr.Items[i].BackColor = Color.Gold;//color
-                DismApi.MountImage(src_wim_path, wim_int_path, src_wim_vol, true, prog_callback);
+                DismApi.MountImage(src_wim_path, mount_point, src_wim_vol, true, prog_callback);
 
                 //imagex
                 lv_ptr.Items[i].BackColor = Color.Aqua;//color
@@ -183,8 +305,8 @@ namespace wim_integrator
                 imagex.StartInfo.RedirectStandardOutput = true;
                 imagex.StartInfo.RedirectStandardError = true;
 
-                string imagex_flag = "/compress maximum /scroll /temp" + " " + "\"" + wim_int_temp_path + "\"" + " ";
-                //imagex cannot create new image by using append, must use capture, everything else is the same, stupid.
+                string imagex_flag = "/scroll /compress" + " " + comp_lv + " " + "/temp" + " " + "\"" + tmp_folder + "\"" + " ";
+                //imagex cannot create new image by using append, must use capture insted, everything else is the same, stupid.
                 string imagex_operation;
                 if (i == 0)
                 {
@@ -194,30 +316,41 @@ namespace wim_integrator
                 {
                     imagex_operation = "/append" + " ";
                 }
-                string imagex_option = "\"" + wim_int_path + "\"" + " " + "\"" + des_wim_path + "\"" + " " + "\"" + vol_name + "\"";
+                string imagex_option = "\"" + mount_point + "\"" + " " + "\"" + des_wim_path + "\"" + " " + "\"" + vol_name + "\"";
                 imagex.StartInfo.FileName = "imagex.exe";
                 imagex.StartInfo.Arguments = imagex_flag + imagex_operation + imagex_option;
 
                 imagex.Start();
 
-                refresh_progress_bar_step(0, 100);//reset progress bar
+                //clear progress bar
+                refresh_progress_bar_step(0, 100);
                 string progress;
                 while (!imagex.HasExited)
                 {
                     progress = imagex.StandardOutput.ReadLine();
-                    if(progress != null)
+                    if (progress != null)
                     {
                         if (progress.StartsWith("["))
                         {
                             refresh_progress_bar_step(Convert.ToInt32(progress.Substring(2, 3)), 100);
                         }
+                        //status bar
+                        refresh_status_label("IMAGEX", progress);
                     }
-                    Thread.Sleep(500);
+                    //avoid load cpu
+                    //since there is no any ReadReady() kind of stuff, I have to use this dirty and easy way
+                    Thread.Sleep(10);
                 }
-                
+
                 //umount vol
+
+                //clear progress bar
+                refresh_progress_bar_step(0, 100);
+                //status bar
+                refresh_status_label("DISM", "Unmounting");
+
                 lv_ptr.Items[i].BackColor = Color.DodgerBlue;//color
-                DismApi.UnmountImage(wim_int_path, false, prog_callback);
+                DismApi.UnmountImage(mount_point, false, prog_callback);
 
                 if (imagex.ExitCode == 0)//color
                 {
@@ -232,53 +365,28 @@ namespace wim_integrator
             }
 
             DismApi.Shutdown();
-            if (Directory.Exists(wim_int_path))
+            if (Directory.Exists(mount_point))
             {
-                Directory.Delete(wim_int_path, true);
+                Directory.Delete(mount_point, true);
             }
-            if (Directory.Exists(wim_int_temp_path))
+            if (Directory.Exists(tmp_folder))
             {
-                Directory.Delete(wim_int_temp_path, true);
+                Directory.Delete(tmp_folder, true);
             }
 
             //unblock buttos
-            this.button_search_folder_sel.Enabled = true;
-            this.button_integrate.Enabled = true;
+            en_dis_able_everything(true);
+            refresh_status_label("Status", "Ready");
         }
 
         private void integrate_wim_file(string wim_save_path)
         {
-            //block buttons
-            this.button_search_folder_sel.Enabled = false;
-            this.button_integrate.Enabled = false;
             des_wim_path = wim_save_path;
             lv_ptr = this.listView_vol;
             Thread th = new Thread(integrate_wim);
             th.Start();
         }
 
-        private void button_search_folder_sel_Click(object sender, EventArgs e)
-        {
-            FolderBrowserDialog folder_sel_dialog = new System.Windows.Forms.FolderBrowserDialog();
-            //folder_sel_dialog.Description = "Select the folder";
-            folder_sel_dialog.ShowNewFolderButton = false;
-            folder_sel_dialog.SelectedPath = this.textBox_search_folder.Text;
-            if (folder_sel_dialog.ShowDialog() == DialogResult.OK)
-            {
-                this.textBox_search_folder.Text = folder_sel_dialog.SelectedPath;
-                search_wim_file(this.textBox_search_folder.Text, "install.wim");
-            }
-        }
 
-        private void button_integrate_Click(object sender, EventArgs e)
-        {
-            SaveFileDialog save_file_dialog = new System.Windows.Forms.SaveFileDialog();
-            //file_dialog.Title = "Save ingrated wim file";
-            save_file_dialog.Filter = "wim file (*.wim)|*.wim";
-            if(save_file_dialog.ShowDialog() == DialogResult.OK)
-            {
-                integrate_wim_file(save_file_dialog.FileName);
-            }
-        }
     }
 }
