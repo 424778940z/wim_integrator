@@ -1,4 +1,8 @@
 
+Version 0.73
+[feature_improve] move search wim to thread
+[bug_fixed] change search rule has no effect
+
 Version 0.62
 [feature_add] be able to select mount point
 [feature_add] be able to select imagex temp folder

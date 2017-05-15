@@ -14,7 +14,8 @@ Note: you need a imagex.exe put in the same folder contains wim_integrator.exe
 - [x] be able to change default search file name (default: *.wim)
 - [ ] be able to filter out small wim files (eg: boot.wim)
 - [x] status bar for display imagex output
-- [ ] move search wim to thread
+- [x] move search wim to thread
+- [ ] implement more error handlers
 
 # Screenshot
 
@@ -37,10 +38,6 @@ Umount volume (DodgerBlue)
 Succeed (Lime), if fail (Red)
 
 ![wim_integrator_4](https://raw.githubusercontent.com/424778940z/wim_integrator/master/screenshot/wim_integrator_4.png)
-
-Everything finished without error 
-
-![wim_integrator_5](https://raw.githubusercontent.com/424778940z/wim_integrator/master/screenshot/wim_integrator_5.png)
 
 Finished wim
 
