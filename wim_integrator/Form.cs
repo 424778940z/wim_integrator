@@ -18,9 +18,13 @@ namespace wim_integrator
     public partial class form : Form
     {
         //version
-        string version_string = "Version: 0.6";
+        string version_string = "Version: 0.73";
 
         //for Thread, since it seems no way to pass args
+        //search_wim
+        string search_path;
+        string search_keyword;
+        //integrate_wim
         string src_wim_path;
         int src_wim_vol = 0;
         string des_wim_path;
@@ -28,7 +32,6 @@ namespace wim_integrator
 
         string mount_point;
         string tmp_folder;
-        string search_rule;
         string comp_lv;
 
         ListView lv_ptr;
@@ -53,8 +56,7 @@ namespace wim_integrator
             this.comboBox_comp_lv.SelectedIndex = 0;
             this.comboBox_comp_lv.DropDownStyle =  ComboBoxStyle.DropDownList;
 
-            search_rule = "*.wim";
-            this.textBox_search_rule.Text = search_rule;
+            this.textBox_search_rule.Text = "*.wim";
 
             //lv init
             this.listView_vol.View = View.Details;
@@ -77,7 +79,7 @@ namespace wim_integrator
             if (folder_sel_dialog.ShowDialog() == DialogResult.OK)
             {
                 this.textBox_search_folder.Text = folder_sel_dialog.SelectedPath;
-                search_wim_file(this.textBox_search_folder.Text, search_rule);
+                search_wim_file(this.textBox_search_folder.Text, this.textBox_search_rule.Text);
             }
         }
         private void button_mount_point_sel_Click(object sender, EventArgs e)
@@ -145,6 +147,8 @@ namespace wim_integrator
 
         private void en_dis_able_everything(bool is_enable)
         {
+            //this.Enabled = is_enable;
+            
             this.textBox_search_folder.Enabled = is_enable;
             this.textBox_mnt_point.Enabled = is_enable;
             this.textBox_tmp_folder.Enabled = is_enable;
@@ -155,14 +159,21 @@ namespace wim_integrator
             this.button_search_folder_sel.Enabled = is_enable;
             this.button_mount_point_sel.Enabled = is_enable;
             this.button_tmp_folder_sel.Enabled = is_enable;
-            this.button_integrate.Enabled = is_enable;
-        }
-
-        private void search_wim_file(string path, string keyword)
+            this.button_integrate.Enabled = is_enable;        }
+        
+        private void search_wim()
         {
+            //block buttons
+            en_dis_able_everything(false);
+            //clear progress bar
+            refresh_progress_bar_step(0, 100);
+            refresh_progress_bar_total(0, 100);
+            //status bar
+            refresh_status_label("Status", "Busy");
+
             List<string> wim_file_list = new List<string>();
 
-            wim_file_list = Directory.GetFiles(path, keyword, SearchOption.AllDirectories).ToList();
+            wim_file_list = Directory.GetFiles(search_path, search_keyword, SearchOption.AllDirectories).ToList();
 
             this.listView_vol.BeginUpdate();
             DismApi.Initialize(DismLogLevel.LogErrors);
@@ -212,22 +223,38 @@ namespace wim_integrator
                     item_buff.SubItems.Add(imageInfos[j].ProductVersion.ToString());
 
                     this.listView_vol.Items.Add(item_buff);
+
+                    //progress bar for total index in single file
+                    refresh_progress_bar_step(j + 1, imageInfos.Count);
                 }
+                //progress bar for total file
+                refresh_progress_bar_total(i + 1, wim_file_list.Count);
             }
             DismApi.Shutdown();
             this.listView_vol.EndUpdate();
             this.listView_vol.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
+
+            //unblock buttos
+            en_dis_able_everything(true);
+            refresh_status_label("Status", "Ready");
+        }
+
+        private void search_wim_file(string search_path, string search_keyword)
+        {
+            this.search_path = search_path;
+            this.search_keyword = search_keyword;
+            Thread th = new Thread(search_wim);
+            th.Start();
         }
 
         private void integrate_wim()
         {
+            //block buttons
+            en_dis_able_everything(false);
             //clear progress bar
             refresh_progress_bar_total(0, 100);
             //status bar
             refresh_status_label("Status", "Busy");
-
-            //block buttons
-            en_dis_able_everything(false);
 
             //not necessary, but looks more clear
             List<string> path = new List<string>();
@@ -386,7 +413,5 @@ namespace wim_integrator
             Thread th = new Thread(integrate_wim);
             th.Start();
         }
-
-
     }
 }
