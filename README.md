@@ -12,6 +12,7 @@ Note: you need a imagex.exe put in the same folder contains wim_integrator.exe
 - [x] be able to select imagex temp folder
 - [x] be able to change compresson level
 - [x] be able to change default search file name (default: *.wim)
+- [x] be able to delete remove unwanted volumes from list before integration
 - [ ] be able to filter out small wim files (eg: boot.wim)
 - [x] status bar for display imagex output
 - [x] move search wim to thread

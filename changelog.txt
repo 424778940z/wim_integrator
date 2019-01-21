@@ -1,3 +1,5 @@
+Version 0.83
+[feature_add] be able to remove unwanted volumes from list before integration
 
 Version 0.73
 [feature_improve] move search wim to thread

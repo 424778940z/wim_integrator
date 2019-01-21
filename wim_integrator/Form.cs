@@ -18,7 +18,7 @@ namespace wim_integrator
     public partial class form : Form
     {
         //version
-        string version_string = "Version: 0.73";
+        string version_string = "Version: 0.83";
 
         //for Thread, since it seems no way to pass args
         //search_wim
@@ -57,7 +57,7 @@ namespace wim_integrator
             this.comboBox_comp_lv.DropDownStyle =  ComboBoxStyle.DropDownList;
 
             this.textBox_search_rule.Text = "*.wim";
-
+            
             //lv init
             this.listView_vol.View = View.Details;
             this.listView_vol.Columns.Add("Path");
@@ -66,6 +66,7 @@ namespace wim_integrator
             this.listView_vol.Columns.Add("Platform");
             this.listView_vol.Columns.Add("Language");
             this.listView_vol.Columns.Add("Version");
+            this.listView_vol.ContextMenuStrip = listview_contextmenu;
 
             refresh_status_label("Status", "Ready");
         }
@@ -117,6 +118,16 @@ namespace wim_integrator
         private void comboBox_comp_lv_SelectedIndexChanged(object sender, EventArgs e)
         {
             comp_lv = this.comboBox_comp_lv.SelectedItem.ToString();
+        }
+        private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (listView_vol.SelectedItems.Count > 0)
+            {
+                foreach (ListViewItem i in listView_vol.SelectedItems)
+                {
+                    listView_vol.Items.Remove(i);
+                }
+            }
         }
 
         private void refresh_status_label(string from, string text)
@@ -357,7 +368,7 @@ namespace wim_integrator
                     progress = imagex.StandardOutput.ReadLine();
                     if (progress != null)
                     {
-                        if (progress.StartsWith("["))
+                        if (progress.StartsWith("[") && !progress.Contains("ERROR"))
                         {
                             refresh_progress_bar_step(Convert.ToInt32(progress.Substring(2, 3)), 100);
                         }
@@ -413,5 +424,6 @@ namespace wim_integrator
             Thread th = new Thread(integrate_wim);
             th.Start();
         }
+
     }
 }

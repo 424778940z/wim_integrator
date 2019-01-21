@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.listView_vol = new System.Windows.Forms.ListView();
             this.textBox_search_folder = new System.Windows.Forms.TextBox();
             this.label_search_folder = new System.Windows.Forms.Label();
@@ -47,7 +48,10 @@
             this.textBox_search_rule = new System.Windows.Forms.TextBox();
             this.label_comp_lv = new System.Windows.Forms.Label();
             this.comboBox_comp_lv = new System.Windows.Forms.ComboBox();
+            this.listview_contextmenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.deleteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip.SuspendLayout();
+            this.listview_contextmenu.SuspendLayout();
             this.SuspendLayout();
             // 
             // listView_vol
@@ -233,6 +237,20 @@
             this.comboBox_comp_lv.TabIndex = 7;
             this.comboBox_comp_lv.SelectedIndexChanged += new System.EventHandler(this.comboBox_comp_lv_SelectedIndexChanged);
             // 
+            // listview_contextmenu
+            // 
+            this.listview_contextmenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.deleteToolStripMenuItem});
+            this.listview_contextmenu.Name = "listview_contextmenu";
+            this.listview_contextmenu.Size = new System.Drawing.Size(181, 48);
+            // 
+            // deleteToolStripMenuItem
+            // 
+            this.deleteToolStripMenuItem.Name = "deleteToolStripMenuItem";
+            this.deleteToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.deleteToolStripMenuItem.Text = "Delete";
+            this.deleteToolStripMenuItem.Click += new System.EventHandler(this.deleteToolStripMenuItem_Click);
+            // 
             // form
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -261,6 +279,7 @@
             this.Text = "WIM Integrator";
             this.statusStrip.ResumeLayout(false);
             this.statusStrip.PerformLayout();
+            this.listview_contextmenu.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -287,6 +306,8 @@
         private System.Windows.Forms.Label label_comp_lv;
         private System.Windows.Forms.ComboBox comboBox_comp_lv;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel;
+        private System.Windows.Forms.ContextMenuStrip listview_contextmenu;
+        private System.Windows.Forms.ToolStripMenuItem deleteToolStripMenuItem;
     }
 }
 
